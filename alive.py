@@ -38,7 +38,7 @@ def base_commits(days_since_anchor: int, day_of_week: int) -> int:
     w4 = math.sin(2 * math.pi * d / 7 + t * 0.4)
     w5 = math.sin(2 * math.pi * (t * 1.3 + d) / 9)
 
-    combined = w1 * 0.35 + w2 * 0.25 + w3 * 0.15 + w4 * 0.15 + w5 * 0.10
+    combined = w1 * 0.40 + w2 * 0.20 + w3 * 0.15 + w4 * 0.15 + w5 * 0.10
     count = round(3 + (combined + 1) * 18.5)
     return max(1, min(40, count))
 
