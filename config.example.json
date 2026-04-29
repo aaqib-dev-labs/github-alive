@@ -1,0 +1,5 @@
+{
+  "github_token": "your_github_personal_access_token_here",
+  "github_user": "your_github_username",
+  "alive_repo": "alive"
+}
