@@ -39,7 +39,8 @@ delta   = max(0, target - real) # only fill the gap; 0 if already at/above targe
 
 > **Note:** `real` counts commits across *all* your repos, including `alive`.
 > This makes every run idempotent — if the first run already hit the target,
-> subsequent runs (10:00, 18:00 UTC) see delta=0 and do nothing.
+> subsequent runs (10:00, 18:00 UTC) see delta=0 and do nothing. This ensures
+> your contribution graph remains clean and follows the designed pattern.
 
 ---
 
