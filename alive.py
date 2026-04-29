@@ -55,6 +55,7 @@ def load_config() -> dict:
         'github_token': '',
         'github_user': '',
         'alive_repo': 'alive',
+        'alive_repo_owner': '',
     }
 
     script_dir = Path(__file__).parent
@@ -72,6 +73,8 @@ def load_config() -> dict:
     for env_key, cfg_key in [('GITHUB_USER', 'github_user'), ('GITHUB_REPO', 'alive_repo')]:
         if os.environ.get(env_key):
             config[cfg_key] = os.environ[env_key]
+    if os.environ.get('ALIVE_REPO_OWNER'):
+        config['alive_repo_owner'] = os.environ['ALIVE_REPO_OWNER']
 
     if not config['github_token']:
         log.error("Missing GITHUB_TOKEN.")
@@ -88,8 +91,9 @@ class GitHubAPI:
 
     BASE = 'https://api.github.com'
 
-    def __init__(self, token: str, user: str, user_id: int | None = None):
+    def __init__(self, token: str, user: str, user_id: int | None = None, repo_owner: str | None = None):
         self.user = user
+        self.repo_owner = repo_owner or user
         self.user_id = user_id
         self.session = requests.Session()
         self.session.headers.update({
@@ -137,7 +141,7 @@ class GitHubAPI:
             return 0
 
     def get_file(self, repo: str, file_path: str) -> dict:
-        return self._get(f'/repos/{self.user}/{repo}/contents/{file_path}')
+        return self._get(f'/repos/{self.repo_owner}/{repo}/contents/{file_path}')
 
     def create_or_update_file(
         self,
@@ -166,12 +170,12 @@ class GitHubAPI:
         }
         if sha:
             data['sha'] = sha
-        return self._put(f'/repos/{self.user}/{repo}/contents/{file_path}', data)
+        return self._put(f'/repos/{self.repo_owner}/{repo}/contents/{file_path}', data)
 
 
 
 def make_commits(api: GitHubAPI, repo: str, count: int, date_str: str) -> None:
-    log.info(f"Making {count} commit(s) to {api.user}/{repo} for {date_str}...")
+    log.info(f"Making {count} commit(s) to {api.repo_owner}/{repo} for {date_str}...")
 
     base_dt = datetime.datetime.strptime(date_str, '%Y-%m-%d').replace(
         hour=0, minute=0, second=0
@@ -223,7 +227,7 @@ def main():
     base = get_base_commits(today)
     log.info(f"Today: {date_str}  |  Pattern target: {base} commits")
 
-    api = GitHubAPI(token=token, user=user)
+    api = GitHubAPI(token=token, user=user, repo_owner=config.get('alive_repo_owner') or user)
 
     real = api.count_real_commits(date_str, repo)
     log.info(f"Commits today (all repos, incl. {repo}): {real}")

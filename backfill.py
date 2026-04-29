@@ -52,7 +52,7 @@ def get_base_commits(d: datetime.date) -> int:
 
 
 def load_config() -> dict:
-    config = {'github_token': '', 'github_user': '', 'alive_repo': 'alive'}
+    config = {'github_token': '', 'github_user': '', 'alive_repo': 'alive', 'alive_repo_owner': ''}
     cfg_path = Path(__file__).parent / 'config.json'
     if cfg_path.exists():
         with open(cfg_path) as f:
@@ -63,6 +63,8 @@ def load_config() -> dict:
     for env_key, cfg_key in [('GITHUB_USER', 'github_user'), ('GITHUB_REPO', 'alive_repo')]:
         if os.environ.get(env_key):
             config[cfg_key] = os.environ[env_key]
+    if os.environ.get('ALIVE_REPO_OWNER'):
+        config['alive_repo_owner'] = os.environ['ALIVE_REPO_OWNER']
     if not config['github_token']:
         sys.exit(1)
     if not config['github_user']:
@@ -74,8 +76,9 @@ def load_config() -> dict:
 class GitHubAPI:
     BASE = 'https://api.github.com'
 
-    def __init__(self, token: str, user: str):
+    def __init__(self, token: str, user: str, repo_owner: str | None = None):
         self.user = user
+        self.repo_owner = repo_owner or user
         self._user_id: int | None = None
         self.session = requests.Session()
         self.session.headers.update({
@@ -97,7 +100,7 @@ class GitHubAPI:
 
     def get_file(self, repo: str, path: str) -> dict:
         resp = self.session.get(
-            f'{self.BASE}/repos/{self.user}/{repo}/contents/{path}', timeout=30
+            f'{self.BASE}/repos/{self.repo_owner}/{repo}/contents/{path}', timeout=30
         )
         if resp.status_code == 404:
             return {}
@@ -106,7 +109,7 @@ class GitHubAPI:
 
     def put_file(self, repo: str, path: str, data: dict) -> dict:
         resp = self.session.put(
-            f'{self.BASE}/repos/{self.user}/{repo}/contents/{path}',
+            f'{self.BASE}/repos/{self.repo_owner}/{repo}/contents/{path}',
             json=data, timeout=30,
         )
         resp.raise_for_status()
@@ -125,7 +128,7 @@ def main():
     end_date = datetime.date.fromisoformat(args.end)
 
     config = load_config()
-    api = GitHubAPI(config['github_token'], config['github_user'])
+    api = GitHubAPI(config['github_token'], config['github_user'], config.get('alive_repo_owner') or config['github_user'])
     repo = config['alive_repo']
     user = config['github_user']
 

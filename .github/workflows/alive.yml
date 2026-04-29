@@ -30,6 +30,7 @@ jobs:
           ALIVE_GH_TOKEN: ${{ secrets.ALIVE_TOKEN }}
           GITHUB_USER: ${{ secrets.GH_USER }}
           GITHUB_REPO: alive
+          ALIVE_REPO_OWNER: aaqib-dev-labs
         run: python3 alive.py
 
       - name: Keep this repo active
